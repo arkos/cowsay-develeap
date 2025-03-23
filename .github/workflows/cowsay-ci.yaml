@@ -23,7 +23,7 @@ jobs:
 
       - name: Test Application
         run: |
-          curl http://localhost:8008 || exit 1
+          curl http://localhost:8080 || exit 1
 
       - name: Cleanup
         run: |
