@@ -15,24 +15,3 @@ jobs:
 
       - name: Use the environment variable
         run: echo $MY_ENV_VAR
-
-      - name: Determine Current Version
-        id: version
-        run: |
-          # Check if version.txt exists; initialize if not
-          if [ ! -f version.txt ]; then echo "0.0.0" > version.txt; fi
-          
-          # Read the current version
-          CURRENT_VERSION=$(cat version.txt)
-          
-          # Increment the patch number
-          PATCH=$(echo $CURRENT_VERSION | awk -F. '{print $3}')
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1 "." $2 "."}'$NEW_PATCH)
-          
-          # Update version.txt with the new version
-          echo $NEW_VERSION > version.txt
-          
-          # Export the new version for use in the workflow
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          echo "Current version: $CURRENT_VERSION, New version: $NEW_VERSION"
