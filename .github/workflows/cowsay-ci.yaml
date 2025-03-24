@@ -1,9 +1,18 @@
-name: Cowsay Workflow
-on: 
-  workflow_dispatch:
+name: Cowsay CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
-  build:
+  build-and-package:
+    name: Build and Package Application
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -16,18 +25,78 @@ jobs:
         run: |
           docker images | grep cowsay
 
+      - name: Save Docker Image as Artifact
+        run: |
+          docker save cowsay:latest | gzip > cowsay-latest.tar.gz
+
+      - name: Upload Docker Image Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cowsay-docker-image
+          path: cowsay-latest.tar.gz
+
+  run-and-test:
+    name: Run and Test Application
+    needs: build-and-package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Docker Image Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: cowsay-docker-image
+
+      - name: Load Docker Image
+        run: |
+          gunzip -c cowsay-latest.tar.gz | docker load
+
       - name: Run Docker Container
         run: |
-          docker run -d -p 8080:8080 --name cowsay cowsay:latest
+          docker run -d -p 8080:8080 --name cowsay-container cowsay:latest
           sleep 5
 
       - name: Test Application
         run: |
           curl -o /dev/null -s -w "%{http_code}" http://localhost:8080/hello | grep -q 200 || exit 1
-          
+
       - name: Cleanup
         run: |
-          docker stop cowsay
-          docker rm cowsay
-          
-      
+          docker stop cowsay-container
+          docker rm cowsay-container
+
+  publish:
+    name: Publish Docker Image to ECR
+    needs: run-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Docker Image Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: cowsay-docker-image
+
+      - name: Load Docker Image
+        run: |
+          gunzip -c cowsay-latest.tar.gz | docker load
+
+      - name: Configure AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          aws --version
+
+      - name: Login to Amazon ECR
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Tag and Push Docker Image
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          docker tag cowsay:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/cowsay:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/cowsay:latest
