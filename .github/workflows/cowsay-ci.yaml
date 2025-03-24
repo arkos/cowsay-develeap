@@ -79,13 +79,6 @@ jobs:
         run: |
           gunzip -c cowsay-latest.tar.gz | docker load
 
-      - name: Configure AWS CLI
-        run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
-          aws --version
-
       - name: Login to Amazon ECR
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
