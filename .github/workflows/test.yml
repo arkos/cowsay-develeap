@@ -1,0 +1,17 @@
+name: Test $GITHUB_ENV
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-echo:
+    name: Test Echo $GITHUB_ENV
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set an environment variable
+        run: echo "MY_ENV_VAR=Hello World" >> $GITHUB_ENV
+
+      - name: Use the environment variable
+        run: echo $MY_ENV_VAR
