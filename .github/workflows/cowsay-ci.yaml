@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - version.txt
   pull_request:
     branches:
       - main
@@ -17,9 +19,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Build Docker Image
+      - name: Determine Current Version
+        id: version
         run: |
-          docker build -t cowsay:latest .
+          # Check if version.txt exists; initialize if not
+          if [ ! -f version.txt ]; then echo "0.0.0" > version.txt; fi
+          
+          # Read the current version
+          CURRENT_VERSION=$(cat version.txt)
+          
+          # Increment the patch number
+          PATCH=$(echo $CURRENT_VERSION | awk -F. '{print $3}')
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1 "." $2 "."}'$NEW_PATCH)
+          
+          # Update version.txt with the new version
+          echo $NEW_VERSION > version.txt
+          
+          # Export the new version for use in the workflow
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "Current version: $CURRENT_VERSION, New version: $NEW_VERSION"
+
+      - name: Build Docker Image with Version Tag
+        run: |
+          docker build -t cowsay:$NEW_VERSION .
 
       - name: Verify Docker Image
         run: |
@@ -27,13 +50,21 @@ jobs:
 
       - name: Save Docker Image as Artifact
         run: |
-          docker save cowsay:latest | gzip > cowsay-latest.tar.gz
+          docker save cowsay:$NEW_VERSION | gzip > cowsay-$NEW_VERSION.tar.gz
 
       - name: Upload Docker Image Artifact
         uses: actions/upload-artifact@v4
         with:
           name: cowsay-docker-image
-          path: cowsay-latest.tar.gz
+          path: cowsay-$NEW_VERSION.tar.gz
+
+      - name: Commit Updated Version File
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add version.txt
+          git commit -m "Bump version to $NEW_VERSION"
+          git push
 
   run-and-test:
     name: Run and Test Application
@@ -48,11 +79,11 @@ jobs:
 
       - name: Load Docker Image
         run: |
-          gunzip -c cowsay-latest.tar.gz | docker load
+          gunzip -c cowsay-$NEW_VERSION.tar.gz | docker load
 
       - name: Run Docker Container
         run: |
-          docker run -d -p 8080:8080 --name cowsay-container cowsay:latest
+          docker run -d -p 8080:8080 --name cowsay-container cowsay:$NEW_VERSION
           sleep 5
 
       - name: Test Application
@@ -77,7 +108,7 @@ jobs:
 
       - name: Load Docker Image
         run: |
-          gunzip -c cowsay-latest.tar.gz | docker load
+          gunzip -c cowsay-$NEW_VERSION.tar.gz | docker load
 
       - name: Login to Amazon ECR
         env:
@@ -91,5 +122,7 @@ jobs:
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          docker tag cowsay:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/dev/cowsay:latest
+          docker tag cowsay:$NEW_VERSION ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/dev/cowsay:$NEW_VERSION
+          docker tag cowsay:$NEW_VERSION ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/dev/cowsay:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/dev/cowsay:$NEW_VERSION
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/dev/cowsay:latest
