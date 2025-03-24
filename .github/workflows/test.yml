@@ -39,5 +39,6 @@ jobs:
           # Export the new version for use in the workflow
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo $NEW_VERSION
-          echo $GITHUB_ENV
+          cat $GITHUB_ENV
           echo "Current version: $CURRENT_VERSION, New version: $NEW_VERSION"
+          echo $NEW_VERSION
