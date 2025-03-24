@@ -23,8 +23,8 @@ jobs:
 
       - name: Test Application
         run: |
-          curl -o /dev/null -s -w "%{http_code}" http://example.com | grep -q 200 || exit 1
-
+          curl -o /dev/null -s -w "%{http_code}" http://localhost:8080/hello | grep -q 200 || exit 1
+          
       - name: Cleanup
         run: |
           docker stop cowsay
