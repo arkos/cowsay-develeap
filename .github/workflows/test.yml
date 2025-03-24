@@ -24,13 +24,11 @@ jobs:
           
           # Read the current version
           CURRENT_VERSION=$(cat version.txt)
-          echo $CURRENT_VERSION
           
           # Increment the patch number
           PATCH=$(echo $CURRENT_VERSION | awk -F. '{print $3}')
           NEW_PATCH=$((PATCH + 1))
-          echo $NEW_PATCH
-          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1 "." $2 "." $NEW_PATCH}')
+          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{major = $1; minor = $2; patch = $NEW_PATCH; print major "." minor "." patch}')
           echo $NEW_VERSION
           
           # Update version.txt with the new version
@@ -38,7 +36,4 @@ jobs:
           
           # Export the new version for use in the workflow
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          echo $NEW_VERSION
-          cat $GITHUB_ENV
           echo "Current version: $CURRENT_VERSION, New version: $NEW_VERSION"
-          echo $NEW_VERSION
