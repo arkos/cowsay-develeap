@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -40,6 +42,7 @@ jobs:
           # Export the new version for use in the workflow
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "Current version: $CURRENT_VERSION, New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Build Docker Image with Version Tag
         run: |
@@ -81,6 +84,8 @@ jobs:
   run-and-test:
     name: Run and Test Application
     needs: build-and-package
+    env:
+      NEW_VERSION: ${{ needs.build-and-package.outputs.version }}
     runs-on: ubuntu-latest
 
     steps:
@@ -111,6 +116,8 @@ jobs:
     name: Publish Docker Image to ECR
     needs: run-and-test
     runs-on: ubuntu-latest
+    env:
+     NEW_VERSION: ${{ needs.build-and-package.outputs.version }}
 
     steps:
       - name: Download Docker Image Artifact
