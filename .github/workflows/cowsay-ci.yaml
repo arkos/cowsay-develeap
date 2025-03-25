@@ -63,9 +63,14 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+      
+          # Pull the latest changes from the remote main branch
+          git pull origin main --rebase
+      
+          # Stage, commit, and push the updated version file
           git add version.txt
           git commit -m "Bump version to $NEW_VERSION"
-          git push
+          git push origin main
 
   run-and-test:
     name: Run and Test Application
