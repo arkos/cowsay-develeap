@@ -40,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cowsay-docker-image
-          path: version-$NEW_VERSION.txt
+          path: version-${{ env.NEW_VERSION }}.txt
