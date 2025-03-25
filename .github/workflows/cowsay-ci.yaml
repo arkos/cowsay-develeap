@@ -64,8 +64,8 @@ jobs:
 
       - name: Commit Updated Version File
         run: |
-          # git config user.name "GitHub Actions"
-          # git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
       
           # Stash any unstaged changes
           # git stash
