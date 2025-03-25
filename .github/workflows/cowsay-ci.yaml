@@ -64,14 +64,20 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
       
-          # Pull the latest changes from the remote main branch
+          # Stash any unstaged changes
+          git stash
+      
+          # Pull the latest changes and rebase
           git pull origin main --rebase
+      
+          # Apply the stashed changes
+          git stash pop || true
       
           # Stage, commit, and push the updated version file
           git add version.txt
           git commit -m "Bump version to $NEW_VERSION"
           git push origin main
-
+    
   run-and-test:
     name: Run and Test Application
     needs: build-and-package
