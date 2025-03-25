@@ -52,6 +52,7 @@ jobs:
       - name: Save Docker Image as Artifact
         run: |
           docker save cowsay:$NEW_VERSION | gzip > cowsay-$NEW_VERSION.tar.gz
+          ls -l cowsay-$NEW_VERSION.tar.gz
 
       - name: Upload Docker Image Artifact
         uses: actions/upload-artifact@v4
