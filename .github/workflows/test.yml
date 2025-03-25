@@ -29,10 +29,12 @@ jobs:
           
           # Update version.txt with the new version
           echo $NEW_VERSION > version-$NEW_VERSION.txt
+          ls -l version-$NEW_VERSION.txt
           
           # Export the new version for use in the workflow
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "Current version: $CURRENT_VERSION, New version: $NEW_VERSION"
+          ls -l version-$NEW_VERSION.txt
           
       - name: Upload Docker Image Artifact
         uses: actions/upload-artifact@v4
