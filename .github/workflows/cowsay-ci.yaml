@@ -64,17 +64,17 @@ jobs:
 
       - name: Commit Updated Version File
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          # git config user.name "GitHub Actions"
+          # git config user.email "actions@github.com"
       
           # Stash any unstaged changes
-          git stash
+          # git stash
       
           # Pull the latest changes and rebase
-          git pull origin main --rebase
+          # git pull origin main --rebase
       
           # Apply the stashed changes
-          git stash pop || true
+          # git stash pop || true
       
           # Stage, commit, and push the updated version file
           git add version.txt
