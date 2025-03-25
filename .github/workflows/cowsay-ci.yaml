@@ -136,3 +136,15 @@ jobs:
           docker tag cowsay:${{ env.NEW_VERSION }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/dev/cowsay:latest
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/dev/cowsay:${{ env.NEW_VERSION }}
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/dev/cowsay:latest
+
+      - name: Login to GitHub Packages
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Tag and Push Docker Image to GitHub Packages
+        run: |
+          docker tag cowsay:${{ env.NEW_VERSION }} ghcr.io/${{ github.repository_owner }}/cowsay:${{ env.NEW_VERSION }}
+          docker tag cowsay:${{ env.NEW_VERSION }} ghcr.io/${{ github.repository_owner }}/cowsay:latest
+          docker push ghcr.io/${{ github.repository_owner }}/cowsay:${{ env.NEW_VERSION }}
+          docker push ghcr.io/${{ github.repository_owner }}/cowsay:latest
+
