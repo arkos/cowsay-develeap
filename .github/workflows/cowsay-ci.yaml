@@ -107,6 +107,8 @@ jobs:
     name: Publish Docker Image to ECR
     needs: [build-and-package, run-and-test]
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     env:
      NEW_VERSION: ${{ needs.build-and-package.outputs.version }}
 
